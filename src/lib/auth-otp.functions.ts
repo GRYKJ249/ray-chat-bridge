@@ -90,7 +90,16 @@ export const requestPhoneCode = createServerFn({ method: "POST" })
 
     const result = await sendWhatsappCode(data.phone, code);
     if (!result.sent) {
-      return { ok: false as const, error: "send_failed" as const };
+      const { whatsappInstanceState } = await import("@/lib/whatsapp.server");
+      const state = await whatsappInstanceState();
+      console.error("whatsapp code not sent", { result, state });
+      return {
+        ok: false as const,
+        error: "send_failed" as const,
+        reason: result.reason,
+        detail: "detail" in result ? result.detail : undefined,
+        instanceState: state.ok ? state.state : state.reason,
+      };
     }
     return { ok: true as const, delivery: "whatsapp" as const };
   });
